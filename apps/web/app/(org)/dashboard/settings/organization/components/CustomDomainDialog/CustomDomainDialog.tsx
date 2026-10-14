@@ -14,7 +14,6 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { toast } from "sonner";
 import { checkOrganizationDomain } from "@/actions/organization/check-domain";
-import { removeOrganizationDomain } from "@/actions/organization/remove-domain";
 import { updateDomain } from "@/actions/organization/update-domain";
 import type { ConfettiRef } from "@/app/(org)/dashboard/_components/Confetti";
 import { Confetti } from "@/app/(org)/dashboard/_components/Confetti";
@@ -152,9 +151,7 @@ const CustomDomainDialog = ({
 			domain: string;
 			orgId: string;
 		}) => {
-			if (activeOrganization?.organization.customDomain) {
-				await removeOrganizationDomain(Organisation.OrganisationId.make(orgId));
-			}
+			// Keep the existing assignment if the replacement fails.
 			return await updateDomain(
 				domain,
 				Organisation.OrganisationId.make(orgId),
@@ -162,6 +159,7 @@ const CustomDomainDialog = ({
 		},
 		onSuccess: (data) => {
 			dispatch({ type: "NEXT_STEP" });
+			setDomainConfig(data?.config ?? null);
 			toast.success("Domain settings updated");
 			router.refresh();
 			if (data) {
@@ -271,7 +269,7 @@ const CustomDomainDialog = ({
 		(showToasts = true) => {
 			if (
 				!activeOrganization?.organization.id ||
-				!activeOrganization?.organization.customDomain
+				!domain
 			)
 				return;
 
@@ -282,7 +280,7 @@ const CustomDomainDialog = ({
 		},
 		[
 			activeOrganization?.organization.id,
-			activeOrganization?.organization.customDomain,
+			domain,
 		],
 	);
 

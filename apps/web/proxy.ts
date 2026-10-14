@@ -1,5 +1,5 @@
 import { db } from "@cap/database";
-import { organizations } from "@cap/database/schema";
+import { organizations, videos } from "@cap/database/schema";
 import { buildEnv, serverEnv } from "@cap/env";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
@@ -52,6 +52,35 @@ export async function proxy(request: NextRequest) {
 	}
 
 	const hostname = url.hostname;
+
+	// Custom hostnames on a self-hosted instance only serve videos belonging
+	// to the verified organization. Sign-in and dashboards stay on WEB_URL.
+	if (buildEnv.NEXT_PUBLIC_IS_CAP !== "true" && process.env.NODE_ENV !== "development") {
+		const primary = new URL(serverEnv().WEB_URL);
+		if (hostname !== primary.hostname && hostname !== "localhost" && hostname !== "127.0.0.1") {
+			const fallback = new URL(path + url.search, primary);
+			const videoId = /^\/s\/([^/]+)\/?$/.exec(path)?.[1];
+			if (!videoId) return NextResponse.redirect(fallback);
+			try {
+				const [organization] = await db()
+					.select({ id: organizations.id, verified: organizations.domainVerified })
+					.from(organizations)
+					.where(eq(organizations.customDomain, hostname))
+					.limit(1);
+				if (!organization?.verified) return NextResponse.redirect(fallback);
+				const [video] = await db()
+					.select({ orgId: videos.orgId })
+					.from(videos)
+					.where(eq(videos.id, videoId as typeof videos.$inferSelect.id))
+					.limit(1);
+				if (!video || video.orgId !== organization.id) return NextResponse.redirect(fallback);
+				return NextResponse.next();
+			} catch (error) {
+				console.error("Self-hosted domain resolution failed", error);
+				return NextResponse.redirect(fallback);
+			}
+		}
+	}
 
 	if (buildEnv.NEXT_PUBLIC_IS_CAP !== "true") {
 		if (

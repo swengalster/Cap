@@ -368,7 +368,7 @@ export const CapCard = ({
 		handleCopy(
 			NODE_ENV === "development"
 				? `${webUrl}/s/${cap.id}`
-				: buildEnv.NEXT_PUBLIC_IS_CAP && customDomain && domainVerified
+				: customDomain && domainVerified
 					? `https://${customDomain}/s/${cap.id}`
 					: `${webUrl}/s/${cap.id}`,
 		);

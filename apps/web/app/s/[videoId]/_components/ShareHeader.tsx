@@ -442,7 +442,6 @@ export const ShareHeader = ({
 
 	const getVideoLink = () => {
 		if (
-			(NODE_ENV === "development" || buildEnv.NEXT_PUBLIC_IS_CAP) &&
 			customDomain &&
 			domainVerified
 		) {
@@ -453,7 +452,6 @@ export const ShareHeader = ({
 
 	const getDisplayLink = () => {
 		if (
-			(NODE_ENV === "development" || buildEnv.NEXT_PUBLIC_IS_CAP) &&
 			customDomain &&
 			domainVerified
 		) {
