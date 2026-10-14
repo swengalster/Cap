@@ -9,7 +9,7 @@ export const isSelfHostedDomainMode = () =>
 export const normalizeOrganizationDomain = (input: string) => {
 	const domain = input.trim().toLowerCase().replace(/\.$/, "");
 	if (
-		!^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(domain) ||
+		!/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/.test(domain) ||
 		domain === "cap.so" ||
 		domain === "cap.link" ||
 		domain === new URL(serverEnv().WEB_URL).hostname.toLowerCase()
