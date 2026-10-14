@@ -32,6 +32,7 @@ export function ChromeExtensionButton({
 			icon={
 				<Image
 					src="/logos/browsers/google-chrome.svg"
+					unoptimized
 					width={20}
 					height={20}
 					alt=""
