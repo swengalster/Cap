@@ -57,7 +57,16 @@ export async function proxy(request: NextRequest) {
 	// to the verified organization. Sign-in and dashboards stay on WEB_URL.
 	if (buildEnv.NEXT_PUBLIC_IS_CAP !== "true" && process.env.NODE_ENV !== "development") {
 		const primary = new URL(serverEnv().WEB_URL);
-		if (hostname !== primary.hostname && hostname !== "localhost" && hostname !== "127.0.0.1") {
+		// The standalone server builds request.url from its bind address
+		// (0.0.0.0), so the public hostname has to come from the Host header.
+		const requestHost = (request.headers.get("host") ?? hostname)
+			.split(":")[0]
+			.toLowerCase();
+		if (
+			requestHost !== primary.hostname &&
+			requestHost !== "localhost" &&
+			requestHost !== "127.0.0.1"
+		) {
 			const fallback = new URL(path + url.search, primary);
 			const videoId = /^\/s\/([^/]+)\/?$/.exec(path)?.[1];
 			if (!videoId) return NextResponse.redirect(fallback);
@@ -65,7 +74,7 @@ export async function proxy(request: NextRequest) {
 				const [organization] = await db()
 					.select({ id: organizations.id, verified: organizations.domainVerified })
 					.from(organizations)
-					.where(eq(organizations.customDomain, hostname))
+					.where(eq(organizations.customDomain, requestHost))
 					.limit(1);
 				if (!organization?.verified) return NextResponse.redirect(fallback);
 				const [video] = await db()
