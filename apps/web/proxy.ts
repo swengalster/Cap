@@ -11,6 +11,8 @@ const addHttps = (s?: string) => {
 	return `https://${s}`;
 };
 
+const isPublicAsset = (path: string) => /\/[^/]+\.[a-z0-9]+$/i.test(path);
+
 const mainOrigins = [
 	"https://cap.so",
 	"https://cap.link",
@@ -111,7 +113,8 @@ export async function proxy(request: NextRequest) {
 				path.startsWith("/verify-otp") ||
 				path.startsWith("/embed/") ||
 				path.startsWith("/.well-known/workflow/") ||
-				path.startsWith("/.well-known/oauth-")
+				path.startsWith("/.well-known/oauth-") ||
+				isPublicAsset(path)
 			) &&
 			process.env.NODE_ENV !== "development"
 		)

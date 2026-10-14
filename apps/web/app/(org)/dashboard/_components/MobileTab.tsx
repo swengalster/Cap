@@ -1,8 +1,18 @@
 "use client";
 
 import { useClickAway } from "@uidotdev/usehooks";
+import {
+	Button,
+	Dialog,
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@cap/ui";
+import { faBuilding } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import clsx from "clsx";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -14,6 +24,7 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { NewOrganization } from "@/components/forms/NewOrganization";
 import { SignedImageUrl } from "@/components/SignedImageUrl";
 import {
 	canViewOrganizationSettings,
@@ -35,6 +46,10 @@ const Tabs = [
 
 const MobileTab = () => {
 	const [open, setOpen] = useState(false);
+	const [dialogOpen, setDialogOpen] = useState(false);
+	const formRef = useRef<HTMLFormElement | null>(null);
+	const [createLoading, setCreateLoading] = useState(false);
+	const [organizationName, setOrganizationName] = useState("");
 	const containerRef = useRef<HTMLButtonElement>(null);
 	const { activeOrganization: activeOrg, user } = useDashboardContext();
 	const currentMember = activeOrg?.members.find(
@@ -55,21 +70,62 @@ const MobileTab = () => {
 		}
 	});
 	return (
-		<div className="flex sticky bottom-0 z-50 flex-1 gap-10 justify-between items-center px-5 w-screen h-16 border-t lg:hidden border-gray-5 bg-gray-1">
-			<div className="relative flex-auto w-fit">
-				<AnimatePresence>
-					{open && <OrgsMenu setOpen={setOpen} menuRef={menuRef} />}
-				</AnimatePresence>
-				<Orgs open={open} setOpen={setOpen} containerRef={containerRef} />
+		<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+			<div className="flex sticky bottom-0 z-50 flex-1 gap-10 justify-between items-center px-5 w-screen h-16 border-t lg:hidden border-gray-5 bg-gray-1">
+				<div className="relative flex-auto w-fit">
+					<AnimatePresence>
+						{open && (
+							<OrgsMenu
+								setOpen={setOpen}
+								setDialogOpen={setDialogOpen}
+								menuRef={menuRef}
+							/>
+						)}
+					</AnimatePresence>
+					<Orgs open={open} setOpen={setOpen} containerRef={containerRef} />
+				</div>
+				<div className="flex gap-6 justify-between items-center h-full text-gray-11">
+					{Tabs.filter((i) => !i.adminOnly || canViewSettings).map((tab) => (
+						<Link href={tab.href} key={tab.href}>
+							{tab.icon}
+						</Link>
+					))}
+				</div>
 			</div>
-			<div className="flex gap-6 justify-between items-center h-full text-gray-11">
-				{Tabs.filter((i) => !i.adminOnly || canViewSettings).map((tab) => (
-					<Link href={tab.href} key={tab.href}>
-						{tab.icon}
-					</Link>
-				))}
-			</div>
-		</div>
+			<DialogContent className="p-0 w-full max-w-md rounded-xl bg-gray-2">
+				<DialogHeader
+					icon={<FontAwesomeIcon icon={faBuilding} />}
+					description="A new organization to share caps with your team"
+				>
+					<DialogTitle className="text-lg text-gray-12">
+						Create New Organization
+					</DialogTitle>
+				</DialogHeader>
+				<div className="p-5">
+					<NewOrganization
+						setCreateLoading={setCreateLoading}
+						onOrganizationCreated={() => setDialogOpen(false)}
+						formRef={formRef}
+						onNameChange={setOrganizationName}
+					/>
+				</div>
+				<DialogFooter>
+					<Button variant="gray" size="sm" onClick={() => setDialogOpen(false)}>
+						Cancel
+					</Button>
+					<Button
+						variant="dark"
+						size="sm"
+						disabled={createLoading || !organizationName.trim().length}
+						spinner={createLoading}
+						onClick={() => formRef.current?.requestSubmit()}
+						type="submit"
+					>
+						{createLoading ? "Creating..." : "Create"}
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	);
 };
 
@@ -111,9 +167,11 @@ const Orgs = ({
 
 const OrgsMenu = ({
 	setOpen,
+	setDialogOpen,
 	menuRef,
 }: {
 	setOpen: Dispatch<SetStateAction<boolean>>;
+	setDialogOpen: Dispatch<SetStateAction<boolean>>;
 	menuRef: MutableRefObject<Element>;
 }) => {
 	const { activeOrganization: activeOrg, organizationData: orgData } =
@@ -171,6 +229,18 @@ const OrgsMenu = ({
 					</button>
 				);
 			})}
+			<Button
+				variant="dark"
+				size="sm"
+				className="flex gap-1 items-center mt-2 w-full text-sm"
+				onClick={() => {
+					setOpen(false);
+					setDialogOpen(true);
+				}}
+			>
+				<Plus className="w-3.5 h-auto" />
+				New organization
+			</Button>
 		</motion.div>
 	);
 };
