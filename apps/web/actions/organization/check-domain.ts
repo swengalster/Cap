@@ -31,7 +31,10 @@ export async function checkOrganizationDomain(
 	}
 
 	try {
-		const status = await checkDomainStatus(organization.customDomain);
+		const status = await checkDomainStatus(
+			organization.customDomain,
+			organizationId,
+		);
 
 		if (status.verified && !organization.domainVerified) {
 			await db()

@@ -441,22 +441,14 @@ export const ShareHeader = ({
 	};
 
 	const getVideoLink = () => {
-		if (
-			(NODE_ENV === "development" || buildEnv.NEXT_PUBLIC_IS_CAP) &&
-			customDomain &&
-			domainVerified
-		) {
+		if (customDomain && domainVerified) {
 			return `https://${customDomain}/s/${data.id}`;
 		}
 		return `${webUrl}/s/${data.id}`;
 	};
 
 	const getDisplayLink = () => {
-		if (
-			(NODE_ENV === "development" || buildEnv.NEXT_PUBLIC_IS_CAP) &&
-			customDomain &&
-			domainVerified
-		) {
+		if (customDomain && domainVerified) {
 			return `${customDomain}/s/${data.id}`;
 		}
 		return `${webUrl}/s/${data.id}`;

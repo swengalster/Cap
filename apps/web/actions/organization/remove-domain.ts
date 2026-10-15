@@ -7,6 +7,7 @@ import type { Organisation } from "@cap/web-domain";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { requireOrganizationSettingsManager } from "./authorization";
+import { isSelfHostedDomainMode } from "./domain-utils";
 
 export async function removeOrganizationDomain(
 	organizationId: Organisation.OrganisationId,
@@ -27,7 +28,7 @@ export async function removeOrganizationDomain(
 	await requireOrganizationSettingsManager(user.id, organizationId);
 
 	try {
-		if (organization.customDomain) {
+		if (organization.customDomain && !isSelfHostedDomainMode()) {
 			await fetch(
 				`https://api.vercel.com/v9/projects/${
 					process.env.VERCEL_PROJECT_ID

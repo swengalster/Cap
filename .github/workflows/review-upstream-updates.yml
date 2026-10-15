@@ -1,0 +1,64 @@
+name: Review upstream Cap updates
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-review
+  cancel-in-progress: false
+
+jobs:
+  propose-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Merge upstream into a review branch
+        id: update
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/CapSoftware/Cap.git
+          git fetch upstream main
+          git checkout -B chore/upstream-review origin/main
+
+          if ! git merge --no-edit --no-ff upstream/main; then
+            git merge --abort
+            echo "::error::Upstream has merge conflicts. Review manually; production was not modified."
+            exit 1
+          fi
+
+          if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Already up to date"
+          else
+            git push --force-with-lease origin HEAD:refs/heads/chore/upstream-review
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or update review PR
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! gh pr list --head chore/upstream-review --base main --state open --json number --jq '.[0].number' | grep -q '[0-9]'; then
+            gh pr create \
+              --base main \
+              --head chore/upstream-review \
+              --title "chore: review upstream Cap updates" \
+              --body "Automated upstream sync proposal from CapSoftware/Cap main. Review domain customizations, database migrations, Docker image/build and CI before merging. This does not deploy to production."
+          fi

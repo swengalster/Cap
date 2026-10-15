@@ -3,7 +3,12 @@ name: cap
 services:
   cap-web:
     container_name: cap-web
-    image: ghcr.io/capsoftware/cap-web:latest
+    image: cap-web:selfhost
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_WEB_URL: ${CAP_URL:-http://localhost:3000}
     restart: unless-stopped
     depends_on:
       mysql:

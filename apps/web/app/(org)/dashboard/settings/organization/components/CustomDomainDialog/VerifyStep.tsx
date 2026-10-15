@@ -4,7 +4,6 @@ import { Check, Copy } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { parse } from "tldts";
-import { useDashboardContext } from "@/app/(org)/dashboard/Contexts";
 import type { DomainConfig, DomainVerification } from "./types";
 
 interface VerifyStepProps {
@@ -35,7 +34,6 @@ const VerifyStep = ({
 	initialConfigLoading,
 }: VerifyStepProps) => {
 	const [copiedField, setCopiedField] = useState<string | null>(null);
-	const { activeOrganization } = useDashboardContext();
 
 	const recommendedCnames = domainConfig?.recommendedCNAME || [];
 	const recommendedIPv4 = domainConfig?.recommendedIPv4 || [];
@@ -112,7 +110,7 @@ const VerifyStep = ({
 
 	useEffect(() => {
 		let interval: NodeJS.Timeout;
-		if (activeOrganization?.organization.customDomain && !isVerified) {
+		if (domain && !isVerified) {
 			checkVerification(false);
 
 			interval = setInterval(() => {
@@ -123,11 +121,7 @@ const VerifyStep = ({
 		return () => {
 			clearInterval(interval);
 		};
-	}, [
-		activeOrganization?.organization.customDomain,
-		isVerified,
-		checkVerification,
-	]);
+	}, [domain, isVerified, checkVerification]);
 
 	return (
 		<div className="space-y-6">
