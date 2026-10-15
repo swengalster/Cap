@@ -65,7 +65,7 @@ export async function proxy(request: NextRequest) {
 		// The standalone server builds request.url from its bind address
 		// (0.0.0.0), so the public hostname has to come from the Host header.
 		const requestHost = (request.headers.get("host") ?? hostname)
-			.split(":")[0]
+			.replace(/:\d+$/, "")
 			.toLowerCase();
 		if (
 			requestHost !== primary.hostname &&

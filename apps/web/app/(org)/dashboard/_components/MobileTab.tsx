@@ -1,6 +1,5 @@
 "use client";
 
-import { useClickAway } from "@uidotdev/usehooks";
 import {
 	Button,
 	Dialog,
@@ -11,6 +10,7 @@ import {
 } from "@cap/ui";
 import { faBuilding } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useClickAway } from "@uidotdev/usehooks";
 import clsx from "clsx";
 import { Check, ChevronDown, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
