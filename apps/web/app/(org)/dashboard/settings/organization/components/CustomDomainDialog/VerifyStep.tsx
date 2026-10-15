@@ -121,11 +121,7 @@ const VerifyStep = ({
 		return () => {
 			clearInterval(interval);
 		};
-	}, [
-		domain,
-		isVerified,
-		checkVerification,
-	]);
+	}, [domain, isVerified, checkVerification]);
 
 	return (
 		<div className="space-y-6">

@@ -14,7 +14,9 @@ export const normalizeOrganizationDomain = (input: string) => {
 		domain === "cap.link" ||
 		domain === new URL(serverEnv().WEB_URL).hostname.toLowerCase()
 	) {
-		throw new Error("Enter a valid hostname different from the main Cap domain.");
+		throw new Error(
+			"Enter a valid hostname different from the main Cap domain.",
+		);
 	}
 	return domain;
 };
@@ -26,13 +28,18 @@ const ownershipRecord = (domain: string, organizationId: string) => {
 	}
 	return {
 		host: "_cap-verification." + domain,
-		value: "cap-domain-verification=" + createHmac("sha256", secret)
-			.update(organizationId + ":" + domain)
-			.digest("hex"),
+		value:
+			"cap-domain-verification=" +
+			createHmac("sha256", secret)
+				.update(organizationId + ":" + domain)
+				.digest("hex"),
 	};
 };
 
-const checkSelfHostedDomain = async (domain: string, organizationId: string) => {
+const checkSelfHostedDomain = async (
+	domain: string,
+	organizationId: string,
+) => {
 	const { host, value } = ownershipRecord(domain, organizationId);
 	const primaryHostname = new URL(serverEnv().WEB_URL).hostname;
 	const [txtRecords, currentCnames, currentAValues] = await Promise.all([
@@ -211,7 +218,8 @@ export const checkDomainStatus = async (
 	organizationId?: string,
 ) => {
 	if (isSelfHostedDomainMode()) {
-		if (!organizationId) throw new Error("Organization ID is required for verification.");
+		if (!organizationId)
+			throw new Error("Organization ID is required for verification.");
 		return checkSelfHostedDomain(domain, organizationId);
 	}
 

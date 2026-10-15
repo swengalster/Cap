@@ -267,21 +267,14 @@ const CustomDomainDialog = ({
 
 	const checkVerification = useCallback(
 		(showToasts = true) => {
-			if (
-				!activeOrganization?.organization.id ||
-				!domain
-			)
-				return;
+			if (!activeOrganization?.organization.id || !domain) return;
 
 			checkDomainMutationRef.current?.mutate({
 				orgId: activeOrganization.organization.id,
 				showToasts,
 			});
 		},
-		[
-			activeOrganization?.organization.id,
-			domain,
-		],
+		[activeOrganization?.organization.id, domain],
 	);
 
 	if (!currentStep) {

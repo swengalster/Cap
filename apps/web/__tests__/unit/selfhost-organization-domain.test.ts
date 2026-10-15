@@ -29,7 +29,9 @@ describe("self-hosted organization domains", () => {
 
 	it("accepts non-Cloudflare subdomains without a Vercel account", async () => {
 		expect(isSelfHostedDomainMode()).toBe(true);
-		expect(normalizeOrganizationDomain(" CAP.ISPPM.NGO. ")).toBe("cap.isppm.ngo");
+		expect(normalizeOrganizationDomain(" CAP.ISPPM.NGO. ")).toBe(
+			"cap.isppm.ngo",
+		);
 		const result = await checkDomainStatus("cap.isppm.ngo", "org-1");
 		expect(result.verified).toBe(false);
 		expect(result.config?.recommendedCNAME?.[0]?.value).toBe(

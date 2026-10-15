@@ -30,9 +30,7 @@ export function ChromeExtensionButton({
 			variant={variant}
 			className={`group ${className ?? ""}`}
 			icon={
-				<GoogleChromeIcon
-					className="mr-2 size-5 shrink-0 transition-transform duration-500 group-hover:rotate-[360deg]"
-				/>
+				<GoogleChromeIcon className="mr-2 size-5 shrink-0 transition-transform duration-500 group-hover:rotate-[360deg]" />
 			}
 		>
 			{label}

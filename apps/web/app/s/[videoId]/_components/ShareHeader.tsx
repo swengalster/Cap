@@ -441,20 +441,14 @@ export const ShareHeader = ({
 	};
 
 	const getVideoLink = () => {
-		if (
-			customDomain &&
-			domainVerified
-		) {
+		if (customDomain && domainVerified) {
 			return `https://${customDomain}/s/${data.id}`;
 		}
 		return `${webUrl}/s/${data.id}`;
 	};
 
 	const getDisplayLink = () => {
-		if (
-			customDomain &&
-			domainVerified
-		) {
+		if (customDomain && domainVerified) {
 			return `${customDomain}/s/${data.id}`;
 		}
 		return `${webUrl}/s/${data.id}`;

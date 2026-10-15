@@ -57,7 +57,10 @@ export async function proxy(request: NextRequest) {
 
 	// Custom hostnames on a self-hosted instance only serve videos belonging
 	// to the verified organization. Sign-in and dashboards stay on WEB_URL.
-	if (buildEnv.NEXT_PUBLIC_IS_CAP !== "true" && process.env.NODE_ENV !== "development") {
+	if (
+		buildEnv.NEXT_PUBLIC_IS_CAP !== "true" &&
+		process.env.NODE_ENV !== "development"
+	) {
 		const primary = new URL(serverEnv().WEB_URL);
 		// The standalone server builds request.url from its bind address
 		// (0.0.0.0), so the public hostname has to come from the Host header.
@@ -74,7 +77,10 @@ export async function proxy(request: NextRequest) {
 			if (!videoId) return NextResponse.redirect(fallback);
 			try {
 				const [organization] = await db()
-					.select({ id: organizations.id, verified: organizations.domainVerified })
+					.select({
+						id: organizations.id,
+						verified: organizations.domainVerified,
+					})
 					.from(organizations)
 					.where(eq(organizations.customDomain, requestHost))
 					.limit(1);
@@ -84,7 +90,8 @@ export async function proxy(request: NextRequest) {
 					.from(videos)
 					.where(eq(videos.id, videoId as typeof videos.$inferSelect.id))
 					.limit(1);
-				if (!video || video.orgId !== organization.id) return NextResponse.redirect(fallback);
+				if (!video || video.orgId !== organization.id)
+					return NextResponse.redirect(fallback);
 				return NextResponse.next();
 			} catch (error) {
 				console.error("Self-hosted domain resolution failed", error);
