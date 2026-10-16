@@ -55,10 +55,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if ! gh pr list --head chore/upstream-review --base main --state open --json number --jq '.[0].number' | grep -q '[0-9]'; then
-            gh pr create \
-              --base main \
-              --head chore/upstream-review \
-              --title "chore: review upstream Cap updates" \
-              --body "Automated upstream sync proposal from CapSoftware/Cap main. Review domain customizations, database migrations, Docker image/build and CI before merging. This does not deploy to production."
+          # Prefer REST here: do not rely on gh pr list's GraphQL behavior.
+          EXISTING_PR=$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&base=main&per_page=100" \
+            --jq '[.[] | select(.head.ref == "chore/upstream-review")] | first | .number // empty')
+          if [[ -n "$EXISTING_PR" ]]; then
+            echo "Updated existing upstream review PR #$EXISTING_PR"
+            exit 0
+          fi
+          if ! gh pr create \
+            --base main \
+            --head chore/upstream-review \
+            --title "chore: review upstream Cap updates" \
+            --body "Automated upstream sync proposal from CapSoftware/Cap main. Review domain customizations, database migrations, Docker image/build and CI before merging. This does not deploy to production."; then
+            echo "::error::Upstream review branch was updated, but GitHub blocked pull-request creation. Enable 'Allow GitHub Actions to create and approve pull requests' under Settings > Actions > General (if available), or create a PR manually from chore/upstream-review into main."
+            exit 1
           fi
