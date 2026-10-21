@@ -1,3 +1,5 @@
+import { statSync } from "node:fs";
+import { resolve, sep } from "node:path";
 import { db } from "@cap/database";
 import { organizations, videos } from "@cap/database/schema";
 import { buildEnv, serverEnv } from "@cap/env";
@@ -11,7 +13,17 @@ const addHttps = (s?: string) => {
 	return `https://${s}`;
 };
 
-const isPublicAsset = (path: string) => /\/[^/]+\.[a-z0-9]+$/i.test(path);
+const publicDir = resolve(process.cwd(), "public");
+
+const isPublicAsset = (path: string) => {
+	try {
+		const file = resolve(publicDir, `.${decodeURIComponent(path)}`);
+		if (!file.startsWith(`${publicDir}${sep}`)) return false;
+		return statSync(file, { throwIfNoEntry: false })?.isFile() ?? false;
+	} catch {
+		return false;
+	}
+};
 
 const mainOrigins = [
 	"https://cap.so",
@@ -101,8 +113,11 @@ export async function proxy(request: NextRequest) {
 	}
 
 	if (buildEnv.NEXT_PUBLIC_IS_CAP !== "true") {
+		// Files under public/ have no route of their own, so without this every
+		// <img src="/logos/..."> on a self-hosted instance redirects to /login.
 		if (
 			!(
+				isPublicAsset(path) ||
 				path.startsWith("/s/") ||
 				path.startsWith("/c/") ||
 				path.startsWith("/cli/") ||
