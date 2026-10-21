@@ -17,11 +17,25 @@ jobs:
   propose-update:
     runs-on: ubuntu-latest
     steps:
+      # GITHUB_TOKEN cannot push commits that touch .github/workflows/, which
+      # upstream merges regularly do. UPSTREAM_SYNC_TOKEN is a fine-grained PAT
+      # with Contents, Pull requests and Workflows (read and write) on this repo.
+      - name: Require upstream sync token
+        env:
+          UPSTREAM_SYNC_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
+        shell: bash
+        run: |
+          if [[ -z "$UPSTREAM_SYNC_TOKEN" ]]; then
+            echo "::error::Secret UPSTREAM_SYNC_TOKEN is missing. Add a fine-grained PAT with Contents, Pull requests and Workflows (read and write) under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
       - name: Checkout fork
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           persist-credentials: true
+          token: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
 
       - name: Merge upstream into a review branch
         id: update
@@ -51,7 +65,7 @@ jobs:
       - name: Open or update review PR
         if: steps.update.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.UPSTREAM_SYNC_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
@@ -67,6 +81,6 @@ jobs:
             --head chore/upstream-review \
             --title "chore: review upstream Cap updates" \
             --body "Automated upstream sync proposal from CapSoftware/Cap main. Review domain customizations, database migrations, Docker image/build and CI before merging. This does not deploy to production."; then
-            echo "::error::Upstream review branch was updated, but GitHub blocked pull-request creation. Enable 'Allow GitHub Actions to create and approve pull requests' under Settings > Actions > General (if available), or create a PR manually from chore/upstream-review into main."
+            echo "::error::Upstream review branch was updated, but GitHub blocked pull-request creation. Check that UPSTREAM_SYNC_TOKEN has Pull requests (read and write) on this repo and has not expired, or create a PR manually from chore/upstream-review into main."
             exit 1
           fi
